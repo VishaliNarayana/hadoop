@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager;
 
+import edu.okstate.cs.EHL.*;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,6 +27,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ha.HAServiceProtocol;
 import org.apache.hadoop.ha.HAServiceProtocol.HAServiceState;
 import org.apache.hadoop.http.lib.StaticUserWebFilter;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.metrics2.source.JvmMetrics;
 import org.apache.hadoop.security.AuthenticationFilterInitializer;
@@ -99,6 +101,7 @@ import org.apache.hadoop.yarn.webapp.WebApps;
 import org.apache.hadoop.yarn.webapp.WebApps.Builder;
 import org.apache.hadoop.yarn.webapp.util.WebAppUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -1192,6 +1195,20 @@ public class ResourceManager extends CompositeService implements Recoverable {
           SHUTDOWN_HOOK_PRIORITY);
         resourceManager.init(conf);
         resourceManager.start();
+        Job j=Job.getInstance();
+        String path=j.getJobFile();
+        Configuration conf1=new Configuration();
+		conf1.addResource(new File("/usr/local/hadoop/etc/hadoop/hdfs-site.xml").getAbsoluteFile().toURI().toURL());
+		conf1.reloadConfiguration();
+		String f=conf1.get("data.usage.tracker.log.location");
+		if(f.equals(path)){
+			DataUsageTracker d=new DataUsageTracker();
+			d.trackUsageInfo("MR");
+		}
+			
+		}
+        
+        
       }
     } catch (Throwable t) {
       LOG.fatal("Error starting ResourceManager", t);
